@@ -106,24 +106,31 @@ export default function DRHPIPOTool() {
     fetchCompanies()
   }, [fetchCompanies])
 
+  // Create a PDF of the rendered markdown on the server and return a blob URL
   const generatePdfFromMarkdown = async (markdown: string, companyName: string): Promise<string | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/reports/generate-pdf`, {
+      const outputFilename = `${companyName.replace(/[\s/]+/g, "_")}_IPO_Notes.pdf`
+
+      const response = await fetch(`${API_BASE_URL}/generate-report-pdf/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           markdown_content: markdown,
           company_name: companyName,
+          output_filename: outputFilename,
         }),
       })
+
       if (!response.ok) {
-        throw new Error(`PDF generation failed with status: ${response.status}`)
+        const errText = await response.text()
+        throw new Error(`PDF generation failed: ${response.status} – ${errText}`)
       }
+
       const blob = await response.blob()
       return URL.createObjectURL(blob)
     } catch (error) {
       console.error("Error generating PDF from markdown:", error)
-      setShowWarning("Failed to generate the PDF report from the processed notes.")
+      setShowWarning("Failed to generate the PDF report from the processed notes. Please try again.")
       return null
     }
   }
@@ -286,15 +293,14 @@ export default function DRHPIPOTool() {
       if (!response.ok) {
         throw new Error("Failed to fetch company report.")
       }
-      
+
       // Get the PDF blob
       const pdfBlob = await response.blob()
       const pdfUrl = URL.createObjectURL(pdfBlob)
-      
+
       // Store the PDF blob for download functionality
       setCompanyReportPdfBlobUrl(pdfUrl)
       setCompanyReportHtml("") // Clear any HTML content
-      
     } catch (error) {
       console.error(error)
       setShowWarning("Could not load the company report.")
@@ -446,14 +452,17 @@ export default function DRHPIPOTool() {
       .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')
       // Line breaks
       .replace(/\n\n/g, '</p><p class="mb-3">')
-      .replace(/\n/g, '<br>')
-    
+      .replace(/\n/g, "<br>")
+
     // Wrap in paragraphs
     html = `<p class="mb-3">${html}</p>`
-    
+
     // Handle lists properly
-    html = html.replace(/<li class="ml-4">(.*?)<\/li>/g, '<ul class="list-disc ml-6 mb-3"><li class="ml-4">$1</li></ul>')
-    
+    html = html.replace(
+      /<li class="ml-4">(.*?)<\/li>/g,
+      '<ul class="list-disc ml-6 mb-3"><li class="ml-4">$1</li></ul>',
+    )
+
     return html
   }
 
@@ -666,22 +675,20 @@ export default function DRHPIPOTool() {
                   companies.map((company) => (
                     <DropdownMenuItem
                       key={company.id}
-                                              className={`flex flex-col items-start p-3 shimmer-effect ${
-                          company.has_markdown
-                            ? "cursor-pointer hover:bg-gray-50"
-                            : "cursor-not-allowed opacity-50"
-                        }`}
-                        onClick={() => handleCompanySelect(company)}
-                        disabled={!company.has_markdown}
+                      className={`flex flex-col items-start p-3 shimmer-effect ${
+                        company.has_markdown ? "cursor-pointer hover:bg-gray-50" : "cursor-not-allowed opacity-50"
+                      }`}
+                      onClick={() => handleCompanySelect(company)}
+                      disabled={!company.has_markdown}
                     >
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium text-sm">{company.name}</span>
                           <Badge
                             variant="outline"
-                                                          className="text-xs depth-badge bg-green-50 text-green-700 border-green-200"
-                            >
-                              Completed
+                            className="text-xs depth-badge bg-green-50 text-green-700 border-green-200"
+                          >
+                            Completed
                           </Badge>
                         </div>
                         <div className="text-xs text-gray-500 space-y-1">
@@ -719,7 +726,10 @@ export default function DRHPIPOTool() {
                   downloadPDF(companyReportPdfBlobUrl, `${selectedCompanyDetail.name.replace(/ /g, "_")}_IPO_Notes.pdf`)
                 } else if (generatedPdfBlobUrl) {
                   // Download the generated PDF from upload
-                  downloadPDF(generatedPdfBlobUrl, `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`)
+                  downloadPDF(
+                    generatedPdfBlobUrl,
+                    `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`,
+                  )
                 }
               }}
               disabled={!companyReportPdfBlobUrl && !generatedPdfBlobUrl}
@@ -891,11 +901,8 @@ export default function DRHPIPOTool() {
                     Uploaded:{" "}
                     {selectedCompanyDetail ? new Date(selectedCompanyDetail.created_at).toLocaleDateString() : ""}
                   </span>
-                  <Badge
-                    variant="outline"
-                                          className="text-xs bg-green-50 text-green-700 border-green-200"
-                    >
-                      Completed
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    Completed
                   </Badge>
                 </div>
               </div>
@@ -931,7 +938,12 @@ export default function DRHPIPOTool() {
                   <Trash2 className="w-3 h-3 mr-1" />
                   Delete Company
                 </Button>
-                <Button onClick={clearSelectedCompany} variant="outline" size="sm" className="depth-button">
+                <Button
+                  onClick={clearSelectedCompany}
+                  variant="outline"
+                  size="sm"
+                  className="depth-button bg-transparent"
+                >
                   Clear Report
                 </Button>
                 <DialogClose asChild>
