@@ -1,0 +1,217 @@
+@page {
+  size: A4;
+  margin: 20mm 15mm 20mm 15mm;
+
+  @top-center {
+    content: element(page-header);
+  }
+
+  @bottom-center {
+    content: element(page-footer);
+  }
+}
+
+body {
+  font-family: 'Calibri', sans-serif;
+  font-size: 10px;
+  color: #000;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.page {
+  page-break-after: always;
+}
+
+.page-header,
+.page-footer {
+  page-break-inside: avoid;
+}
+
+/* Blue Header for Content Pages */
+.page-header.blue-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: #1565c0;
+  height: 38px;
+  min-height: 38px;
+  max-width: 180mm;
+  margin: 0 auto;
+  border-radius: 0 0 8px 8px;
+  position: running(page-header);
+  box-sizing: border-box;
+  border-bottom: 2px solid #1976d2;
+  padding: 0 12mm;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.company-logo-small {
+  max-height: 26px;
+  max-width: 70px;
+  object-fit: contain;
+}
+
+.company-name-header {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110mm;
+}
+
+.company-name {
+  font-size: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 20px 0;
+  text-align: center;
+  color: white !important;
+  font-weight: bold;
+}
+
+.company-name.blue-theme {
+  color: white !important;
+  font-weight: bold;
+}
+
+.company-logo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+
+.front-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  background: #1565c0;
+  padding: 0 20mm;
+  box-sizing: border-box;
+  position: relative;
+  color: white;
+}
+
+.divider-line.blue-divider {
+  width: 250px;
+  height: 3px;
+  background: white;
+  margin: 20px 0;
+  border-radius: 2px;
+}
+
+.document-title {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.document-title.blue-theme {
+  color: white;
+  font-weight: bold;
+}
+
+.document-date {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.page-content {
+  margin-top: 48px;
+  margin-bottom: 40px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Footer Styles */
+.page-footer.blue-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  height: 30px;
+  position: running(page-footer);
+}
+
+.page-number {
+  color: #1565c0;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-align: center;
+  width: 100%;
+}
+
+.page-num:before {
+  content: counter(page);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: #1565c0 !important;
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  page-break-inside: auto;
+}
+
+table th, table td {
+  border: 1px solid #90caf9;
+  padding: 5px;
+  text-align: left;
+  font-size: 10px;
+}
+
+tr {
+  page-break-inside: avoid;
+}
+
+blockquote {
+  border-left: 4px solid #1565c0;
+  margin: 10px 0;
+  padding: 10px;
+  background: #e3f2fd;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 10px;
+  overflow-x: auto;
+  font-size: 9px;
+}
+
+.page-break {
+  page-break-before: always;
+}
+
+strong, b {
+  color: #1565c0;
+}
+
+.highlight {
+  color: #1565c0;
+  font-weight: bold;
+}

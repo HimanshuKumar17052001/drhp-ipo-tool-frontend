@@ -1,0 +1,280 @@
+/* Web-optimized styles for HTML report display */
+body {
+  font-family: 'Calibri', 'Arial', sans-serif;
+  font-size: 14px;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  line-height: 1.6;
+}
+
+.page {
+  margin-bottom: 40px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.front-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 600px;
+  background: #1565c0;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  position: relative;
+  color: white;
+}
+
+.company-logo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+
+.company-name {
+  font-size: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 20px 0;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+}
+
+.divider-line.blue-divider {
+  width: 250px;
+  height: 3px;
+  background: white;
+  margin: 20px 0;
+  border-radius: 2px;
+}
+
+.document-title {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.document-date {
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* Header and Footer */
+.page-header.blue-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: #1565c0;
+  height: 38px;
+  min-height: 38px;
+  max-width: 180mm;
+  margin: 0 auto;
+  border-radius: 0 0 8px 8px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #1976d2;
+  padding: 0 12mm;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.company-logo-small {
+  max-height: 26px;
+  max-width: 70px;
+  object-fit: contain;
+}
+
+.company-name-header {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110mm;
+}
+
+.page-content {
+  margin-top: 48px;
+  margin-bottom: 40px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.page-footer.blue-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  height: 30px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.page-number {
+  color: #1565c0;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-align: center;
+  width: 100%;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: #1565c0 !important;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+h1 {
+  font-size: 1.8rem;
+  border-bottom: 2px solid #1565c0;
+  padding-bottom: 10px;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.3rem;
+}
+
+p {
+  margin-bottom: 15px;
+  text-align: justify;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 12px;
+}
+
+table th,
+table td {
+  border: 1px solid #90caf9;
+  padding: 8px;
+  text-align: left;
+}
+
+table th {
+  background-color: #e3f2fd;
+  font-weight: bold;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #1565c0;
+  margin: 15px 0;
+  padding: 15px;
+  background: #e3f2fd;
+  font-style: italic;
+}
+
+/* Code blocks */
+pre {
+  background: #f4f4f4;
+  padding: 15px;
+  overflow-x: auto;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+code {
+  background: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* Lists */
+ul, ol {
+  margin-bottom: 15px;
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+/* Emphasis */
+strong, b {
+  color: #1565c0;
+  font-weight: bold;
+}
+
+em {
+  font-style: italic;
+  color: #666;
+}
+
+/* Links */
+a {
+  color: #1565c0;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .page-header.blue-header {
+    padding: 0 8mm;
+    height: 30px;
+  }
+  
+  .company-logo-small {
+    max-height: 20px;
+    max-width: 50px;
+  }
+  
+  .company-name {
+    font-size: 2rem;
+  }
+  
+  .document-title {
+    font-size: 1.5rem;
+  }
+  
+  .page-content {
+    padding: 15px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.3rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+  }
+} 

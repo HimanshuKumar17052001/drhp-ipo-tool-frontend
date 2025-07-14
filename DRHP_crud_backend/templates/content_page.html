@@ -1,0 +1,15 @@
+<div class="page">
+  <header class="page-header blue-header" id="page-header">
+    <div class="header-spacer"></div>
+    <div class="header-center">
+      <img src="{{ company_logo_data }}" class="company-logo-small" />
+      <span class="company-name-header">{{ company_name }}</span>
+    </div>
+  </header>
+  <main class="page-content">
+    {{ content | safe }}
+  </main>
+  <footer class="page-footer blue-footer" id="page-footer">
+    <span class="page-number">Page <span class="page-num"></span></span>
+  </footer>
+</div>
