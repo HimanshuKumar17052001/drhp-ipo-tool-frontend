@@ -83,6 +83,9 @@ export default function DRHPIPOTool() {
   const [scale, setScale] = useState<number>(1.0)
   const [rotation, setRotation] = useState<number>(0)
 
+  // In the DRHPIPOTool component, add a new state for left pane PDF preview:
+  const [leftPanePdfUrl, setLeftPanePdfUrl] = useState<string>("");
+
   // --- API Communication ---
 
   const fetchCompanies = useCallback(async () => {
@@ -249,7 +252,7 @@ export default function DRHPIPOTool() {
             if (pdfResponse.ok) {
               const pdfBlob = await pdfResponse.blob()
               const pdfUrl = URL.createObjectURL(pdfBlob)
-              setCompanyReportPdfBlobUrl(pdfUrl)
+            setCompanyReportPdfBlobUrl(pdfUrl)
               setCompanyReportHtml("") // Clear HTML content
             }
           } catch (error) {
@@ -258,7 +261,7 @@ export default function DRHPIPOTool() {
           setIsLoadingCompanyReport(false)
           // Refresh company list after regeneration
           setTimeout(() => {
-            fetchCompanies()
+          fetchCompanies()
           }, 1000)
         },
         (errorMessage) => {
@@ -280,6 +283,13 @@ export default function DRHPIPOTool() {
     setShowCompanyDetail(false) // Don't show dialog, show in main pane
     setIsLoadingCompanyReport(true)
 
+    // Set the left pane PDF preview
+    setLeftPanePdfUrl(""); // clear first
+    const pdfFilename = companyIdToPdf[company.id];
+    if (pdfFilename) {
+      setLeftPanePdfUrl(`/drhp_pdfs/${pdfFilename}`);
+    }
+
     try {
       // Fetch PDF format directly from the unified endpoint
       const response = await fetch(`${API_BASE_URL}/report/${company.id}?format=pdf`)
@@ -289,10 +299,10 @@ export default function DRHPIPOTool() {
       
       // Get the PDF blob
       const pdfBlob = await response.blob()
-      const pdfUrl = URL.createObjectURL(pdfBlob)
+      const pdfUrlBlob = URL.createObjectURL(pdfBlob)
       
       // Store the PDF blob for download functionality
-      setCompanyReportPdfBlobUrl(pdfUrl)
+        setCompanyReportPdfBlobUrl(pdfUrlBlob)
       setCompanyReportHtml("") // Clear any HTML content
       
     } catch (error) {
@@ -428,6 +438,7 @@ export default function DRHPIPOTool() {
       URL.revokeObjectURL(companyReportPdfBlobUrl)
       setCompanyReportPdfBlobUrl("")
     }
+    setLeftPanePdfUrl("");
   }
 
   // --- Markdown Rendering ---
@@ -457,9 +468,54 @@ export default function DRHPIPOTool() {
     return html
   }
 
+  // --- Company ID to PDF Mapping ---
+  const companyIdToPdf: { [key: string]: string } = {
+    "686e084dd998364cc79a311e": "Ather DRHP.pdf",
+    "687407dd927a7192cfabb784": "Quality Power DRHP.pdf",
+    "686e1d3d077b512c53155a40": "Swiggy DRHP.pdf",
+    "686e0c692bcfa97ae0755649": "Pine Labs DRHP.pdf",
+    "686e46893a2394d9fc909d6d": "Anthem DRHP.pdf",
+    "686bb9c1b80feceaa1168663": "Neilsoft DRHP.pdf",
+    "686d5a5f01d1564dab6e25f3": "Wakefit DRHP.pdf",
+  };
+
   // --- Render Logic ---
 
   const renderLeftPane = () => {
+    if (selectedCompanyDetail) {
+      const pdfFilename = companyIdToPdf[selectedCompanyDetail.id];
+      const leftPanePdfUrl = pdfFilename ? `/drhp_pdfs/${pdfFilename}` : "";
+      if (leftPanePdfUrl) {
+        return (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 overflow-auto bg-gray-100 p-2">
+              <div className="flex justify-center h-full">
+                <div className="depth-content bg-white rounded-lg shadow-lg w-full max-w-4xl h-full flex flex-col">
+                  <iframe
+                    src={leftPanePdfUrl}
+                    className="w-full flex-1 border-0 rounded-lg"
+                    title="DRHP PDF Preview"
+                    style={{ minHeight: "calc(100vh - 200px)", height: "100%" }}
+                    onError={() => {
+                      console.error('Failed to load PDF at', leftPanePdfUrl);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <h3 className="text-lg font-medium mb-2">No DRHP PDF found for this company</h3>
+              <p className="text-sm">Please check the PDF filenames in public/drhp_pdfs.</p>
+            </div>
+          </div>
+        );
+      }
+    }
     switch (leftPaneState) {
       case "upload":
         return (
@@ -666,12 +722,12 @@ export default function DRHPIPOTool() {
                   companies.map((company) => (
                     <DropdownMenuItem
                       key={company.id}
-                                              className={`flex flex-col items-start p-3 shimmer-effect ${
+                      className={`flex flex-col items-start p-3 shimmer-effect ${
                           company.has_markdown
                             ? "cursor-pointer hover:bg-gray-50"
                             : "cursor-not-allowed opacity-50"
-                        }`}
-                        onClick={() => handleCompanySelect(company)}
+                      }`}
+                      onClick={() => handleCompanySelect(company)}
                         disabled={!company.has_markdown}
                     >
                       <div className="w-full">
@@ -700,9 +756,9 @@ export default function DRHPIPOTool() {
             </DropdownMenu>
 
             {selectedCompanyDetail && (
-              <Button
-                variant="outline"
-                size="sm"
+            <Button
+              variant="outline"
+              size="sm"
                 onClick={clearSelectedCompany}
                 className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
               >
@@ -719,8 +775,8 @@ export default function DRHPIPOTool() {
                   downloadPDF(companyReportPdfBlobUrl, `${selectedCompanyDetail.name.replace(/ /g, "_")}_IPO_Notes.pdf`)
                 } else if (generatedPdfBlobUrl) {
                   // Download the generated PDF from upload
-                  downloadPDF(generatedPdfBlobUrl, `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`)
-                }
+                downloadPDF(generatedPdfBlobUrl, `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`)
+              }
               }}
               disabled={!companyReportPdfBlobUrl && !generatedPdfBlobUrl}
               className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
