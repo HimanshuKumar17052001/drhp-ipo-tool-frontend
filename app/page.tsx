@@ -26,7 +26,7 @@ import {
 } from "lucide-react"
 
 // --- API Configuration ---
-const API_BASE_URL = "https://drhp-note-generation.onrender.com"
+const API_BASE_URL = "http://20.172.212.14/"
 
 // --- Type Definitions ---
 interface Company {
@@ -52,7 +52,7 @@ export default function DRHPIPOTool() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>("")
   const [leftPaneState, setLeftPaneState] = useState<LeftPaneState>("upload")
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(isProcessing)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null)
   const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("")
   const [companies, setCompanies] = useState<Company[]>([])
@@ -84,7 +84,7 @@ export default function DRHPIPOTool() {
   const [rotation, setRotation] = useState<number>(0)
 
   // In the DRHPIPOTool component, add a new state for left pane PDF preview:
-  const [leftPanePdfUrl, setLeftPanePdfUrl] = useState<string>("");
+  const [leftPanePdfUrl, setLeftPanePdfUrl] = useState<string>("")
 
   // --- API Communication ---
 
@@ -252,7 +252,7 @@ export default function DRHPIPOTool() {
             if (pdfResponse.ok) {
               const pdfBlob = await pdfResponse.blob()
               const pdfUrl = URL.createObjectURL(pdfBlob)
-            setCompanyReportPdfBlobUrl(pdfUrl)
+              setCompanyReportPdfBlobUrl(pdfUrl)
               setCompanyReportHtml("") // Clear HTML content
             }
           } catch (error) {
@@ -261,7 +261,7 @@ export default function DRHPIPOTool() {
           setIsLoadingCompanyReport(false)
           // Refresh company list after regeneration
           setTimeout(() => {
-          fetchCompanies()
+            fetchCompanies()
           }, 1000)
         },
         (errorMessage) => {
@@ -284,10 +284,10 @@ export default function DRHPIPOTool() {
     setIsLoadingCompanyReport(true)
 
     // Set the left pane PDF preview
-    setLeftPanePdfUrl(""); // clear first
-    const pdfFilename = companyIdToPdf[company.id];
+    setLeftPanePdfUrl("") // clear first
+    const pdfFilename = companyIdToPdf[company.id]
     if (pdfFilename) {
-      setLeftPanePdfUrl(`/drhp_pdfs/${pdfFilename}`);
+      setLeftPanePdfUrl(`/drhp_pdfs/${pdfFilename}`)
     }
 
     try {
@@ -296,15 +296,14 @@ export default function DRHPIPOTool() {
       if (!response.ok) {
         throw new Error("Failed to fetch company report.")
       }
-      
+
       // Get the PDF blob
       const pdfBlob = await response.blob()
       const pdfUrlBlob = URL.createObjectURL(pdfBlob)
-      
+
       // Store the PDF blob for download functionality
-        setCompanyReportPdfBlobUrl(pdfUrlBlob)
+      setCompanyReportPdfBlobUrl(pdfUrlBlob)
       setCompanyReportHtml("") // Clear any HTML content
-      
     } catch (error) {
       console.error(error)
       setShowWarning("Could not load the company report.")
@@ -438,7 +437,7 @@ export default function DRHPIPOTool() {
       URL.revokeObjectURL(companyReportPdfBlobUrl)
       setCompanyReportPdfBlobUrl("")
     }
-    setLeftPanePdfUrl("");
+    setLeftPanePdfUrl("")
   }
 
   // --- Markdown Rendering ---
@@ -457,14 +456,17 @@ export default function DRHPIPOTool() {
       .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')
       // Line breaks
       .replace(/\n\n/g, '</p><p class="mb-3">')
-      .replace(/\n/g, '<br>')
-    
+      .replace(/\n/g, "<br>")
+
     // Wrap in paragraphs
     html = `<p class="mb-3">${html}</p>`
-    
+
     // Handle lists properly
-    html = html.replace(/<li class="ml-4">(.*?)<\/li>/g, '<ul class="list-disc ml-6 mb-3"><li class="ml-4">$1</li></ul>')
-    
+    html = html.replace(
+      /<li class="ml-4">(.*?)<\/li>/g,
+      '<ul class="list-disc ml-6 mb-3"><li class="ml-4">$1</li></ul>',
+    )
+
     return html
   }
 
@@ -477,14 +479,14 @@ export default function DRHPIPOTool() {
     "686e46893a2394d9fc909d6d": "Anthem DRHP.pdf",
     "686bb9c1b80feceaa1168663": "Neilsoft DRHP.pdf",
     "686d5a5f01d1564dab6e25f3": "Wakefit DRHP.pdf",
-  };
+  }
 
   // --- Render Logic ---
 
   const renderLeftPane = () => {
     if (selectedCompanyDetail) {
-      const pdfFilename = companyIdToPdf[selectedCompanyDetail.id];
-      const leftPanePdfUrl = pdfFilename ? `/drhp_pdfs/${pdfFilename}` : "";
+      const pdfFilename = companyIdToPdf[selectedCompanyDetail.id]
+      const leftPanePdfUrl = pdfFilename ? `/drhp_pdfs/${pdfFilename}` : ""
       if (leftPanePdfUrl) {
         return (
           <div className="h-full flex flex-col">
@@ -497,14 +499,14 @@ export default function DRHPIPOTool() {
                     title="DRHP PDF Preview"
                     style={{ minHeight: "calc(100vh - 200px)", height: "100%" }}
                     onError={() => {
-                      console.error('Failed to load PDF at', leftPanePdfUrl);
+                      console.error("Failed to load PDF at", leftPanePdfUrl)
                     }}
                   />
                 </div>
               </div>
             </div>
           </div>
-        );
+        )
       } else {
         return (
           <div className="h-full flex items-center justify-center">
@@ -513,7 +515,7 @@ export default function DRHPIPOTool() {
               <p className="text-sm">Please check the PDF filenames in public/drhp_pdfs.</p>
             </div>
           </div>
-        );
+        )
       }
     }
     switch (leftPaneState) {
@@ -723,21 +725,19 @@ export default function DRHPIPOTool() {
                     <DropdownMenuItem
                       key={company.id}
                       className={`flex flex-col items-start p-3 shimmer-effect ${
-                          company.has_markdown
-                            ? "cursor-pointer hover:bg-gray-50"
-                            : "cursor-not-allowed opacity-50"
+                        company.has_markdown ? "cursor-pointer hover:bg-gray-50" : "cursor-not-allowed opacity-50"
                       }`}
                       onClick={() => handleCompanySelect(company)}
-                        disabled={!company.has_markdown}
+                      disabled={!company.has_markdown}
                     >
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium text-sm">{company.name}</span>
                           <Badge
                             variant="outline"
-                                                          className="text-xs depth-badge bg-green-50 text-green-700 border-green-200"
-                            >
-                              Completed
+                            className="text-xs depth-badge bg-green-50 text-green-700 border-green-200"
+                          >
+                            Completed
                           </Badge>
                         </div>
                         <div className="text-xs text-gray-500 space-y-1">
@@ -756,9 +756,9 @@ export default function DRHPIPOTool() {
             </DropdownMenu>
 
             {selectedCompanyDetail && (
-            <Button
-              variant="outline"
-              size="sm"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={clearSelectedCompany}
                 className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
               >
@@ -775,8 +775,11 @@ export default function DRHPIPOTool() {
                   downloadPDF(companyReportPdfBlobUrl, `${selectedCompanyDetail.name.replace(/ /g, "_")}_IPO_Notes.pdf`)
                 } else if (generatedPdfBlobUrl) {
                   // Download the generated PDF from upload
-                downloadPDF(generatedPdfBlobUrl, `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`)
-              }
+                  downloadPDF(
+                    generatedPdfBlobUrl,
+                    `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`,
+                  )
+                }
               }}
               disabled={!companyReportPdfBlobUrl && !generatedPdfBlobUrl}
               className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
@@ -947,11 +950,8 @@ export default function DRHPIPOTool() {
                     Uploaded:{" "}
                     {selectedCompanyDetail ? new Date(selectedCompanyDetail.created_at).toLocaleDateString() : ""}
                   </span>
-                  <Badge
-                    variant="outline"
-                                          className="text-xs bg-green-50 text-green-700 border-green-200"
-                    >
-                      Completed
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    Completed
                   </Badge>
                 </div>
               </div>
@@ -987,7 +987,12 @@ export default function DRHPIPOTool() {
                   <Trash2 className="w-3 h-3 mr-1" />
                   Delete Company
                 </Button>
-                <Button onClick={clearSelectedCompany} variant="outline" size="sm" className="depth-button">
+                <Button
+                  onClick={clearSelectedCompany}
+                  variant="outline"
+                  size="sm"
+                  className="depth-button bg-transparent"
+                >
                   Clear Report
                 </Button>
                 <DialogClose asChild>
