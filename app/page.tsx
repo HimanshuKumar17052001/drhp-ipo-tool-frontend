@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -12,7 +11,6 @@ import {
   Upload,
   FileText,
   Download,
-  Building2,
   Trash2,
   Play,
   X,
@@ -30,8 +28,8 @@ const API_BASE_URL = "https://drhp-note-generation.onrender.com"
 
 // --- Type Definitions ---
 interface Company {
-  id: string
-  name: string
+  company_id: string
+  company_name: string
   corporate_identity_number: string
   website_link?: string
   created_at: string
@@ -73,8 +71,6 @@ export default function DRHPIPOTool() {
 
   // UI Interaction States
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const companyLogoInputRef = useRef<HTMLInputElement>(null)
-  const entityLogoInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
 
   // PDF Viewer states
@@ -91,12 +87,12 @@ export default function DRHPIPOTool() {
   const fetchCompanies = useCallback(async () => {
     setIsLoadingCompanies(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/companies/`)
+      const response = await fetch(`${API_BASE_URL}/companies`)
       if (!response.ok) {
         throw new Error("Failed to fetch companies.")
       }
-      const data: Company[] = await response.json()
-      setCompanies(data)
+      const data: { companies: Company[] } = await response.json()
+      setCompanies(data.companies)
     } catch (error) {
       console.error(error)
       setShowWarning("Could not load the list of companies. Please refresh the page.")
@@ -109,23 +105,16 @@ export default function DRHPIPOTool() {
     fetchCompanies()
   }, [fetchCompanies])
 
-  const generatePdfFromMarkdown = async (markdown: string, companyName: string): Promise<string | null> => {
+  const generatePdfFromCompanyId = async (companyId: string): Promise<string | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/reports/generate-pdf`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          markdown_content: markdown,
-          company_name: companyName,
-        }),
-      })
+      const response = await fetch(`${API_BASE_URL}/companies/${companyId}/report-pdf`)
       if (!response.ok) {
         throw new Error(`PDF generation failed with status: ${response.status}`)
       }
       const blob = await response.blob()
       return URL.createObjectURL(blob)
     } catch (error) {
-      console.error("Error generating PDF from markdown:", error)
+      console.error("Error generating PDF from company ID:", error)
       setShowWarning("Failed to generate the PDF report from the processed notes.")
       return null
     }
@@ -157,9 +146,9 @@ export default function DRHPIPOTool() {
         if (line.startsWith("data: ")) {
           try {
             const data = JSON.parse(line.substring(6))
-            if (data.status === "COMPLETED") {
+            if (data.status === "completed") {
               onComplete(data)
-            } else if (data.status === "FAILED") {
+            } else if (data.status === "error") {
               onError(data.message)
             } else {
               onUpdate(data)
@@ -184,7 +173,7 @@ export default function DRHPIPOTool() {
     formData.append("file", uploadedFile)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/companies/`, {
+      const response = await fetch(`${API_BASE_URL}/companies/upload`, {
         method: "POST",
         body: formData,
       })
@@ -200,9 +189,11 @@ export default function DRHPIPOTool() {
         async (finalData) => {
           setProcessingStatus({ step: "generating_pdf", message: "Generating PDF report...", status: "PROCESSING" })
           setGeneratedMarkdown(finalData.markdown)
-          const pdfUrl = await generatePdfFromMarkdown(finalData.markdown, uploadedFile.name.replace(".pdf", ""))
-          if (pdfUrl) {
-            setGeneratedPdfBlobUrl(pdfUrl)
+          if (finalData.company_id) {
+            const pdfUrl = await generatePdfFromCompanyId(finalData.company_id)
+            if (pdfUrl) {
+              setGeneratedPdfBlobUrl(pdfUrl)
+            }
           }
           setIsProcessing(false)
           setProcessingStatus(null)
@@ -231,7 +222,7 @@ export default function DRHPIPOTool() {
     setCompanyReportPdfBlobUrl("")
 
     try {
-      const response = await fetch(`${API_BASE_URL}/companies/${selectedCompanyDetail.id}/regenerate`, {
+      const response = await fetch(`${API_BASE_URL}/companies/${selectedCompanyDetail.company_id}/regenerate`, {
         method: "POST",
       })
 
@@ -248,7 +239,7 @@ export default function DRHPIPOTool() {
         async (finalData) => {
           // Fetch the PDF version after regeneration
           try {
-            const pdfResponse = await fetch(`${API_BASE_URL}/report/${selectedCompanyDetail.id}?format=pdf`)
+            const pdfResponse = await fetch(`${API_BASE_URL}/companies/${selectedCompanyDetail.company_id}/report-pdf`)
             if (pdfResponse.ok) {
               const pdfBlob = await pdfResponse.blob()
               const pdfUrl = URL.createObjectURL(pdfBlob)
@@ -285,14 +276,14 @@ export default function DRHPIPOTool() {
 
     // Set the left pane PDF preview
     setLeftPanePdfUrl(""); // clear first
-    const pdfFilename = companyIdToPdf[company.id];
+    const pdfFilename = companyIdToPdf[company.company_id];
     if (pdfFilename) {
       setLeftPanePdfUrl(`/drhp_pdfs/${pdfFilename}`);
     }
 
     try {
       // Fetch PDF format directly from the unified endpoint
-      const response = await fetch(`${API_BASE_URL}/report/${company.id}?format=pdf`)
+      const response = await fetch(`${API_BASE_URL}/companies/${company.company_id}/report-pdf`)
       if (!response.ok) {
         throw new Error("Failed to fetch company report.")
       }
@@ -316,41 +307,18 @@ export default function DRHPIPOTool() {
   const handleDeleteCompany = async () => {
     if (!selectedCompanyDetail) return
     try {
-      const response = await fetch(`${API_BASE_URL}/companies/${selectedCompanyDetail.id}`, {
+      const response = await fetch(`${API_BASE_URL}/companies/${selectedCompanyDetail.company_id}`, {
         method: "DELETE",
       })
-      if (!response.ok) {
+      if (response.status !== 204) {
         throw new Error("Failed to delete company.")
       }
-      setCompanies((prev) => prev.filter((c) => c.id !== selectedCompanyDetail.id))
+      setCompanies((prev: Company[]) => prev.filter((c: Company) => c.company_id !== selectedCompanyDetail.company_id))
       setShowCompanyDetail(false)
       setSelectedCompanyDetail(null)
     } catch (error) {
       console.error(error)
       setShowWarning("Failed to delete the company.")
-    }
-  }
-
-  const handleLogoUpload = async (file: File) => {
-    if (!file) return
-    const formData = new FormData()
-    formData.append("file", file)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/assets/logos`, {
-        method: "POST",
-        body: formData,
-      })
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Logo upload failed")
-      }
-      const result = await response.json()
-      setShowWarning(`Logo "${result.filename}" uploaded successfully! ID: ${result.logo_id}`)
-      // Here you would typically associate this logo_id with a company or entity config
-    } catch (error) {
-      console.error("Logo upload error:", error)
-      setShowWarning(`Logo upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
     }
   }
 
@@ -483,7 +451,7 @@ export default function DRHPIPOTool() {
 
   const renderLeftPane = () => {
     if (selectedCompanyDetail) {
-      const pdfFilename = companyIdToPdf[selectedCompanyDetail.id];
+      const pdfFilename = companyIdToPdf[selectedCompanyDetail.company_id];
       const leftPanePdfUrl = pdfFilename ? `/drhp_pdfs/${pdfFilename}` : "";
       if (leftPanePdfUrl) {
         return (
@@ -551,7 +519,7 @@ export default function DRHPIPOTool() {
                 type="file"
                 accept=".pdf"
                 className="hidden"
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   const file = e.target.files?.[0]
                   if (file) handleFileUpload(file)
                 }}
@@ -667,39 +635,6 @@ export default function DRHPIPOTool() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
-              onClick={() => companyLogoInputRef.current?.click()}
-            >
-              <Upload className="w-4 h-4 mr-1" />
-              Upload Company Logo
-            </Button>
-            <input
-              type="file"
-              ref={companyLogoInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => e.target.files && handleLogoUpload(e.target.files[0])}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 depth-button glow-blue"
-              onClick={() => entityLogoInputRef.current?.click()}
-            >
-              <Building2 className="w-4 h-4 mr-1" />
-              Upload Entity Logo
-            </Button>
-            <input
-              type="file"
-              ref={entityLogoInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => e.target.files && handleLogoUpload(e.target.files[0])}
-            />
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -721,7 +656,7 @@ export default function DRHPIPOTool() {
                 {companies.length > 0 ? (
                   companies.map((company) => (
                     <DropdownMenuItem
-                      key={company.id}
+                      key={company.company_id}
                       className={`flex flex-col items-start p-3 shimmer-effect ${
                           company.has_markdown
                             ? "cursor-pointer hover:bg-gray-50"
@@ -732,7 +667,7 @@ export default function DRHPIPOTool() {
                     >
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-sm">{company.name}</span>
+                          <span className="font-medium text-sm">{company.company_name}</span>
                           <Badge
                             variant="outline"
                                                           className="text-xs depth-badge bg-green-50 text-green-700 border-green-200"
@@ -772,7 +707,7 @@ export default function DRHPIPOTool() {
               onClick={() => {
                 if (selectedCompanyDetail && companyReportPdfBlobUrl) {
                   // Download the PDF that's currently being previewed
-                  downloadPDF(companyReportPdfBlobUrl, `${selectedCompanyDetail.name.replace(/ /g, "_")}_IPO_Notes.pdf`)
+                  downloadPDF(companyReportPdfBlobUrl, `${selectedCompanyDetail.company_name.replace(/ /g, "_")}_IPO_Notes.pdf`)
                 } else if (generatedPdfBlobUrl) {
                   // Download the generated PDF from upload
                 downloadPDF(generatedPdfBlobUrl, `${uploadedFile?.name.replace(".pdf", "") || "Report"}_IPO_Notes.pdf`)
@@ -797,7 +732,7 @@ export default function DRHPIPOTool() {
           <Card className="h-full flex flex-col border-0 depth-card shimmer-effect">
             <div className="p-3 border-b bg-gradient-to-r from-[#023047]/10 to-[#219EBC]/10 rounded-t-md">
               <h2 className="text-base font-medium text-[#023047] drop-shadow-sm">
-                {selectedCompanyDetail ? `${selectedCompanyDetail.name} - IPO Report` : "Generated IPO Notes"}
+                {selectedCompanyDetail ? `${selectedCompanyDetail.company_name} - IPO Report` : "Generated IPO Notes"}
               </h2>
             </div>
 
@@ -940,7 +875,7 @@ export default function DRHPIPOTool() {
           <DialogHeader className="border-b pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle className="text-xl font-bold">{selectedCompanyDetail?.name}</DialogTitle>
+                <DialogTitle className="text-xl font-bold">{selectedCompanyDetail?.company_name}</DialogTitle>
                 <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                   <span>CIN: {selectedCompanyDetail?.corporate_identity_number}</span>
                   <span>
@@ -973,7 +908,7 @@ export default function DRHPIPOTool() {
                   onClick={() =>
                     downloadPDF(
                       companyReportPdfBlobUrl,
-                      `${selectedCompanyDetail?.name.replace(/ /g, "_") || "Report"}_IPO_Notes.pdf`,
+                      `${selectedCompanyDetail?.company_name.replace(/ /g, "_") || "Report"}_IPO_Notes.pdf`,
                     )
                   }
                   disabled={!companyReportPdfBlobUrl}
