@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 
 // --- API Configuration ---
-const API_BASE_URL = "https://drhp-note-generation.onrender.com"
+const API_BASE_URL = "http://20.172.212.14/"
 
 // --- Type Definitions ---
 interface Company {
