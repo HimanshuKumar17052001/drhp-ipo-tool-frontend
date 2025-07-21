@@ -15,6 +15,7 @@ from mongoengine import connect, disconnect, DoesNotExist
 import markdown
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML, CSS
+from contextlib import asynccontextmanager
 
 # Add the backend directory to the Python path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "DRHP_crud_backend"))
@@ -140,10 +141,37 @@ class HealthResponse(BaseModel):
     timestamp: str
 
 # FastAPI App Initialization
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    try:
+        validate_env()
+        # Disconnect any existing connections first
+        try:
+            disconnect(alias="core")
+        except:
+            pass  # Ignore if no connection exists
+        
+        connect(alias="core", host=MONGODB_URI, db=DB_NAME)
+        logger.info(f"Connected to MongoDB at {MONGODB_URI}, DB: {DB_NAME}")
+        yield
+    except Exception as e:
+        logger.error(f"Startup error: {e}")
+        raise
+    finally:
+        # Shutdown
+        try:
+            disconnect(alias="core")
+            logger.info("Disconnected from MongoDB")
+        except Exception as e:
+            logger.error(f"Shutdown error: {e}")
+
+# Update the FastAPI app initialization to use lifespan
 app = FastAPI(
     title="DRHP IPO Notes Generator API",
     description="API to manage and process DRHP documents for IPO note generation.",
     version="2.0.0",
+    lifespan=lifespan
 )
 
 # CORS Configuration
@@ -468,23 +496,6 @@ async def process_drhp_pipeline(pdf_path: str, queue: asyncio.Queue):
             "progress": 0,
             "message": f"Processing failed: {str(e)}"
         })
-
-# API Lifespan Events
-@app.on_event("startup")
-def startup_db_client():
-    """Initialize database connection and validate environment"""
-    try:
-        validate_env()
-        connect(alias="core", host=MONGODB_URI, db=DB_NAME)
-        logger.info(f"Connected to MongoDB at {MONGODB_URI}, DB: {DB_NAME}")
-    except Exception as e:
-        logger.error(f"Startup error: {e}")
-        raise
-
-@app.on_event("shutdown")
-def shutdown_db_client():
-    """Close database connection"""
-    disconnect(alias="core")
 
 # API Endpoints
 
