@@ -2,7 +2,7 @@
 
 Now, let's update your `app/page.tsx` to use this new backend functionality.
 
-```typescriptreact file="app/page.tsx"
+\`\`\`typescriptreact file="app/page.tsx"
 [v0-no-op-code-block-prefix]"use client"
 
 import type React from "react"
