@@ -52,7 +52,7 @@ export default function DRHPIPOTool() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>("")
   const [leftPaneState, setLeftPaneState] = useState<LeftPaneState>("upload")
-  const [isProcessing, setIsProcessing] = useState(isProcessing)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null)
   const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("")
   const [companies, setCompanies] = useState<Company[]>([])
