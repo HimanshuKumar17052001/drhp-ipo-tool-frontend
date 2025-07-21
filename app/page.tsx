@@ -26,7 +26,8 @@ import {
 } from "lucide-react"
 
 // --- API Configuration ---
-const API_BASE_URL = "http://20.172.212.14/"
+// Use HTTPS to avoid mixed-content errors in the preview (served over HTTPS)
+const API_BASE_URL = "https://20.172.212.14/"
 
 // --- Type Definitions ---
 interface Company {
@@ -52,7 +53,7 @@ export default function DRHPIPOTool() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>("")
   const [leftPaneState, setLeftPaneState] = useState<LeftPaneState>("upload")
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(isProcessing)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null)
   const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("")
   const [companies, setCompanies] = useState<Company[]>([])
